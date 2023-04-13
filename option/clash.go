@@ -3,6 +3,7 @@ package option
 type ClashAPIOptions struct {
 	ExternalController       string `json:"external_controller,omitempty"`
 	ExternalUI               string `json:"external_ui,omitempty"`
+	ExternalUIBuildIn        bool   `json:"external_ui_build_in,omitempty"`
 	ExternalUIDownloadURL    string `json:"external_ui_download_url,omitempty"`
 	ExternalUIDownloadDetour string `json:"external_ui_download_detour,omitempty"`
 	Secret                   string `json:"secret,omitempty"`
@@ -22,8 +23,14 @@ type SelectorOutboundOptions struct {
 }
 
 type URLTestOutboundOptions struct {
-	Outbounds []string `json:"outbounds"`
-	URL       string   `json:"url,omitempty"`
-	Interval  Duration `json:"interval,omitempty"`
-	Tolerance uint16   `json:"tolerance,omitempty"`
+	Outbounds []string               `json:"outbounds"`
+	URL       string                 `json:"url,omitempty"`
+	Interval  Duration               `json:"interval,omitempty"`
+	Tolerance uint16                 `json:"tolerance,omitempty"`
+	Fallback  URLTestFallbackOptions `json:"fallback,omitempty"`
+}
+
+type URLTestFallbackOptions struct {
+	Enabled  bool     `json:"enabled,omitempty"`
+	MaxDelay Duration `json:"max_delay,omitempty"`
 }
