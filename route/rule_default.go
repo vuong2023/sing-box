@@ -45,6 +45,7 @@ type RuleItem interface {
 func NewDefaultRule(router adapter.Router, logger log.ContextLogger, options option.DefaultRule) (*DefaultRule, error) {
 	rule := &DefaultRule{
 		abstractDefaultRule{
+			tag:         options.Tag,
 			invert:      options.Invert,
 			skipResolve: options.SkipResolve,
 			outbound:    options.Outbound,
@@ -226,6 +227,7 @@ type LogicalRule struct {
 func NewLogicalRule(router adapter.Router, logger log.ContextLogger, options option.LogicalRule) (*LogicalRule, error) {
 	r := &LogicalRule{
 		abstractLogicalRule{
+			tag:         options.Tag,
 			rules:       make([]adapter.HeadlessRule, len(options.Rules)),
 			invert:      options.Invert,
 			skipResolve: options.SkipResolve,
