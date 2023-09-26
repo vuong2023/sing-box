@@ -15,6 +15,7 @@ import (
 	"github.com/sagernet/sing-box/log"
 	"github.com/sagernet/sing-box/option"
 	"github.com/sagernet/sing-box/outbound"
+	"github.com/sagernet/sing-box/proxyprovider"
 	"github.com/sagernet/sing-box/route"
 	"github.com/sagernet/sing/common"
 	E "github.com/sagernet/sing/common/exceptions"
@@ -26,15 +27,16 @@ import (
 var _ adapter.Service = (*Box)(nil)
 
 type Box struct {
-	createdAt    time.Time
-	router       adapter.Router
-	inbounds     []adapter.Inbound
-	outbounds    []adapter.Outbound
-	logFactory   log.Factory
-	logger       log.ContextLogger
-	preServices  map[string]adapter.Service
-	postServices map[string]adapter.Service
-	done         chan struct{}
+	createdAt      time.Time
+	router         adapter.Router
+	inbounds       []adapter.Inbound
+	outbounds      []adapter.Outbound
+	proxyProviders []adapter.ProxyProvider
+	logFactory     log.Factory
+	logger         log.ContextLogger
+	preServices    map[string]adapter.Service
+	postServices   map[string]adapter.Service
+	done           chan struct{}
 }
 
 type Options struct {
@@ -129,12 +131,46 @@ func New(options Options) (*Box, error) {
 		}
 		outbounds = append(outbounds, out)
 	}
+	proxyProviders := make([]adapter.ProxyProvider, 0, len(options.ProxyProviders))
+	for i, proxyProviderOptions := range options.ProxyProviders {
+		var pp adapter.ProxyProvider
+		var tag string
+		if proxyProviderOptions.Tag != "" {
+			tag = proxyProviderOptions.Tag
+		} else {
+			tag = F.ToString(i)
+			proxyProviderOptions.Tag = tag
+		}
+		pp, err = proxyprovider.NewProxyProvider(ctx, router, logFactory.NewLogger(F.ToString("proxyprovider[", tag, "]")), tag, proxyProviderOptions)
+		if err != nil {
+			return nil, E.Cause(err, "parse proxyprovider[", i, "]")
+		}
+		outboundOptions, err := pp.StartGetOutbounds()
+		if err != nil {
+			return nil, E.Cause(err, "get outbounds from proxyprovider[", i, "]")
+		}
+		for i, outboundOptions := range outboundOptions {
+			var out adapter.Outbound
+			tag := outboundOptions.Tag
+			out, err = outbound.New(
+				ctx,
+				router,
+				logFactory.NewLogger(F.ToString("outbound/", outboundOptions.Type, "[", tag, "]")),
+				tag,
+				outboundOptions)
+			if err != nil {
+				return nil, E.Cause(err, "parse proxyprovider ["+pp.Tag()+"] outbound[", i, "]")
+			}
+			outbounds = append(outbounds, out)
+		}
+		proxyProviders = append(proxyProviders, pp)
+	}
 	err = router.Initialize(inbounds, outbounds, func() adapter.Outbound {
 		out, oErr := outbound.New(ctx, router, logFactory.NewLogger("outbound/direct"), "direct", option.Outbound{Type: "direct", Tag: "default"})
 		common.Must(oErr)
 		outbounds = append(outbounds, out)
 		return out
-	})
+	}, proxyProviders)
 	if err != nil {
 		return nil, err
 	}
@@ -165,15 +201,16 @@ func New(options Options) (*Box, error) {
 		preServices["v2ray api"] = v2rayServer
 	}
 	return &Box{
-		router:       router,
-		inbounds:     inbounds,
-		outbounds:    outbounds,
-		createdAt:    createdAt,
-		logFactory:   logFactory,
-		logger:       logFactory.Logger(),
-		preServices:  preServices,
-		postServices: postServices,
-		done:         make(chan struct{}),
+		router:         router,
+		inbounds:       inbounds,
+		outbounds:      outbounds,
+		proxyProviders: proxyProviders,
+		createdAt:      createdAt,
+		logFactory:     logFactory,
+		logger:         logFactory.Logger(),
+		preServices:    preServices,
+		postServices:   postServices,
+		done:           make(chan struct{}),
 	}, nil
 }
 
@@ -244,6 +281,13 @@ func (s *Box) start() error {
 			return E.Cause(err, "start ", serviceName)
 		}
 	}
+	for _, proxyProvider := range s.proxyProviders {
+		s.logger.Trace("starting proxyprovider ", proxyProvider.Tag())
+		err = proxyProvider.Start()
+		if err != nil {
+			return E.Cause(err, "start proxyprovider ", proxyProvider.Tag())
+		}
+	}
 	for i, in := range s.inbounds {
 		var tag string
 		if in.Tag() == "" {
@@ -292,6 +336,12 @@ func (s *Box) Close() error {
 		s.logger.Trace("closing ", serviceName)
 		errors = E.Append(errors, service.Close(), func(err error) error {
 			return E.Cause(err, "close ", serviceName)
+		})
+	}
+	for _, proxyProvider := range s.proxyProviders {
+		s.logger.Trace("closing proxyprovider ", proxyProvider.Tag())
+		errors = E.Append(errors, proxyProvider.Close(), func(err error) error {
+			return E.Cause(err, "close proxyprovider ", proxyProvider.Tag())
 		})
 	}
 	for i, in := range s.inbounds {
