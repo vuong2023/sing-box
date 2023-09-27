@@ -6,4 +6,5 @@ type TorOutboundOptions struct {
 	ExtraArgs      []string          `json:"extra_args,omitempty"`
 	DataDirectory  string            `json:"data_directory,omitempty"`
 	Options        map[string]string `json:"torrc,omitempty"`
+	SlientStart    bool              `json:"slient_start,omitempty"`
 }

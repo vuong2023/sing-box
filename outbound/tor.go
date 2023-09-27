@@ -33,6 +33,7 @@ type Tor struct {
 	startConf   *tor.StartConf
 	options     map[string]string
 	events      chan control.Event
+	slientStart bool
 	instance    *tor.Tor
 	socksClient *socks.Client
 }
@@ -79,17 +80,23 @@ func NewTor(ctx context.Context, router adapter.Router, logger log.ContextLogger
 			tag:          tag,
 			dependencies: withDialerDependency(options.DialerOptions),
 		},
-		ctx:       ctx,
-		proxy:     NewProxyListener(ctx, logger, outboundDialer),
-		startConf: &startConf,
-		options:   options.Options,
+		ctx:         ctx,
+		proxy:       NewProxyListener(ctx, logger, outboundDialer),
+		startConf:   &startConf,
+		options:     options.Options,
+		slientStart: options.SlientStart,
 	}, nil
 }
 
 func (t *Tor) Start() error {
-	err := t.start()
-	if err != nil {
-		t.Close()
+	var err error
+	if !t.slientStart {
+		err = t.start()
+		if err != nil {
+			t.Close()
+		}
+	} else {
+		go t.start()
 	}
 	return err
 }
@@ -161,6 +168,7 @@ func (t *Tor) start() error {
 	t.logger.Trace("obtained tor socks5 address ", info[0].Val)
 	// TODO: set password for tor socks5 server if supported
 	t.socksClient = socks.NewClient(N.SystemDialer, M.ParseSocksaddr(info[0].Val), socks.Version5, "", "")
+	t.logger.Info("tor is ready")
 	return nil
 }
 
@@ -201,6 +209,9 @@ func (t *Tor) Close() error {
 
 func (t *Tor) DialContext(ctx context.Context, network string, destination M.Socksaddr) (net.Conn, error) {
 	t.logger.InfoContext(ctx, "outbound connection to ", destination)
+	if t.socksClient == nil {
+		return nil, E.New("tor is not ready")
+	}
 	return t.socksClient.DialContext(ctx, network, destination)
 }
 
