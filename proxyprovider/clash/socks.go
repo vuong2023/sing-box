@@ -19,7 +19,7 @@ type ClashSocks struct {
 	SkipCertVerify bool   `yaml:"skip-cert-verify"`
 	ServerName     string `yaml:"servername"`
 	SNI            string `yaml:"sni"`
-	FingerPrint    string `yaml:"fingerprint"`
+	ClientFingerprint    string `yaml:"client-fingerprint"`
 	//
 	UDP *bool `yaml:"udp"`
 }

@@ -18,7 +18,7 @@ type ClashHTTP struct {
 	SkipCertVerify bool   `yaml:"skip-cert-verify"`
 	ServerName     string `yaml:"servername"`
 	SNI            string `yaml:"sni"`
-	Fingerprint    string `yaml:"fingerprint"`
+	ClientFingerprint    string `yaml:"client-fingerprint"`
 }
 
 func (c *ClashHTTP) Tag() string {
@@ -56,10 +56,10 @@ func (c *ClashHTTP) GenerateOptions() (*option.Outbound, error) {
 			tlsOptions.ServerName = c.ClashProxyBasic.Server
 		}
 
-		if c.Fingerprint != "" {
+		if c.ClientFingerprint != "" {
 			tlsOptions.UTLS = &option.OutboundUTLSOptions{
 				Enabled:     true,
-				Fingerprint: c.Fingerprint,
+				Fingerprint: c.ClientFingerprint,
 			}
 		}
 

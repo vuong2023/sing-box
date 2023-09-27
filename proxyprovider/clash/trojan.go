@@ -19,7 +19,7 @@ type ClashTrojan struct {
 	//
 	ALPN           []string `yaml:"alpn"`
 	SkipCertVerify bool     `yaml:"skip-cert-verify"`
-	Fingerprint    string   `yaml:"fingerprint"`
+	ClientFingerprint    string   `yaml:"client-fingerprint"`
 	ServerName     string   `yaml:"servername"`
 	SNI            string   `yaml:"sni"`
 	//
@@ -71,10 +71,10 @@ func (c *ClashTrojan) GenerateOptions() (*option.Outbound, error) {
 		tlsOptions.ServerName = c.ClashProxyBasic.Server
 	}
 
-	if c.Fingerprint != "" {
+	if c.ClientFingerprint != "" {
 		tlsOptions.UTLS = &option.OutboundUTLSOptions{
 			Enabled:     true,
-			Fingerprint: c.Fingerprint,
+			Fingerprint: c.ClientFingerprint,
 		}
 	}
 
