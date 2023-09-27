@@ -16,6 +16,7 @@ type _Options struct {
 	Inbounds       []Inbound            `json:"inbounds,omitempty"`
 	Outbounds      []Outbound           `json:"outbounds,omitempty"`
 	ProxyProviders []ProxyProvider      `json:"proxyproviders,omitempty"`
+	RulProviders   []RuleProvider       `json:"ruleproviders,omitempty"`
 	Route          *RouteOptions        `json:"route,omitempty"`
 	Experimental   *ExperimentalOptions `json:"experimental,omitempty"`
 }

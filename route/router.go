@@ -55,6 +55,8 @@ type Router struct {
 	outboundByTag                      map[string]adapter.Outbound
 	proxyProviders                     []adapter.ProxyProvider
 	proxyProviderByTag                 map[string]adapter.ProxyProvider
+	ruleProviders                      []adapter.RuleProvider
+	ruleProviderByTag                  map[string]adapter.RuleProvider
 	rules                              []adapter.Rule
 	defaultDetour                      string
 	defaultOutboundForConnection       adapter.Outbound
@@ -333,7 +335,7 @@ func NewRouter(
 	return router, nil
 }
 
-func (r *Router) Initialize(inbounds []adapter.Inbound, outbounds []adapter.Outbound, defaultOutbound func() adapter.Outbound, proxyProviders []adapter.ProxyProvider) error {
+func (r *Router) Initialize(inbounds []adapter.Inbound, outbounds []adapter.Outbound, defaultOutbound func() adapter.Outbound, proxyProviders []adapter.ProxyProvider, ruleProviders []adapter.RuleProvider) error {
 	inboundByTag := make(map[string]adapter.Inbound)
 	for _, inbound := range inbounds {
 		inboundByTag[inbound.Tag()] = inbound
@@ -347,6 +349,13 @@ func (r *Router) Initialize(inbounds []adapter.Inbound, outbounds []adapter.Outb
 		proxyProviderByTag = make(map[string]adapter.ProxyProvider)
 		for _, proxyProvider := range proxyProviders {
 			proxyProviderByTag[proxyProvider.Tag()] = proxyProvider
+		}
+	}
+	var ruleProviderByTag map[string]adapter.RuleProvider
+	if len(ruleProviders) > 0 {
+		ruleProviderByTag = make(map[string]adapter.RuleProvider)
+		for _, ruleProvider := range ruleProviders {
+			ruleProviderByTag[ruleProvider.Tag()] = ruleProvider
 		}
 	}
 	var defaultOutboundForConnection adapter.Outbound
@@ -421,6 +430,8 @@ func (r *Router) Initialize(inbounds []adapter.Inbound, outbounds []adapter.Outb
 	}
 	r.proxyProviders = proxyProviders
 	r.proxyProviderByTag = proxyProviderByTag
+	r.ruleProviders = ruleProviders
+	r.ruleProviderByTag = ruleProviderByTag
 	return nil
 }
 
@@ -1046,6 +1057,17 @@ func (r *Router) ProxyProviders() []adapter.ProxyProvider {
 func (r *Router) ProxyProvider(tag string) (proxyProvider adapter.ProxyProvider, loaded bool) {
 	if r.proxyProviderByTag != nil {
 		proxyProvider, loaded = r.proxyProviderByTag[tag]
+	}
+	return
+}
+
+func (r *Router) RuleProviders() []adapter.RuleProvider {
+	return r.ruleProviders
+}
+
+func (r *Router) RuleProvider(tag string) (ruleProvider adapter.RuleProvider, loaded bool) {
+	if r.ruleProviderByTag != nil {
+		ruleProvider, loaded = r.ruleProviderByTag[tag]
 	}
 	return
 }
