@@ -106,7 +106,7 @@ func NewProxyProvider(ctx context.Context, router adapter.Router, logger log.Con
 	if options.RequestDialer.Detour != "" {
 		return nil, E.New("request dialer detour is not supported")
 	}
-	d, err := dialer.NewDefault(router, options.RequestDialer)
+	d, err := dialer.NewSimple(options.RequestDialer)
 	if err != nil {
 		return nil, E.Cause(err, "initialize request dialer failed")
 	}
@@ -138,20 +138,23 @@ func (p *ProxyProvider) StartGetOutbounds() ([]option.Outbound, error) {
 		}
 	}
 	if p.cache == nil || (p.cache != nil && p.updateInterval > 0 && p.cache.LastUpdate.Add(p.updateInterval).Before(time.Now())) {
-		p.logger.Info("updating cache")
+		p.logger.Info("updating outbounds")
 		cache, err := p.wrapUpdate(p.ctx, true)
 		if err == nil {
 			p.cache = cache
 			if p.cacheFile != "" {
+				p.logger.Info("writing cache file: ", p.cacheFile)
 				err := cache.WriteToFile(p.cacheFile)
 				if err != nil {
 					return nil, E.Cause(err, "write cache file failed")
 				}
+				p.logger.Info("write cache file done")
 			}
+			p.logger.Info("outbounds updated")
 		}
 		if err != nil {
 			if p.cache == nil {
-				return nil, E.Cause(err, "update cache failed")
+				return nil, E.Cause(err, "update outbounds failed")
 			} else {
 				p.logger.Warn("update cache failed: ", err)
 			}
@@ -164,7 +167,7 @@ func (p *ProxyProvider) StartGetOutbounds() ([]option.Outbound, error) {
 }
 
 func (p *ProxyProvider) Start() error {
-	if p.updateInterval > 0 {
+	if p.updateInterval > 0 && p.cacheFile != "" {
 		p.autoUpdateCtx, p.autoUpdateCancel = context.WithCancel(p.ctx)
 		p.autoUpdateCancelDone = make(chan struct{}, 1)
 		go p.loopUpdate()
@@ -293,7 +296,9 @@ func (p *ProxyProvider) GetClashInfo() (download uint64, upload uint64, total ui
 }
 
 func (p *ProxyProvider) Update() {
-	p.update(p.ctx, false)
+	if p.updateInterval > 0 && p.cacheFile != "" {
+		p.update(p.ctx, false)
+	}
 }
 
 func (p *ProxyProvider) update(ctx context.Context, isFirst bool) {
@@ -303,7 +308,7 @@ func (p *ProxyProvider) update(ctx context.Context, isFirst bool) {
 	defer p.updateLock.Unlock()
 
 	p.logger.Info("updating cache")
-	cache, err := p.wrapUpdate(p.autoUpdateCtx, false)
+	cache, err := p.wrapUpdate(ctx, false)
 	if err != nil {
 		p.logger.Error("update cache failed: ", err)
 		return
@@ -377,7 +382,11 @@ func (p *ProxyProvider) wrapUpdate(ctx context.Context, isFirst bool) (*Cache, e
 	} else {
 		httpClient = p.httpClient
 	}
-
+	if p.requestTimeout > 0 {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, p.requestTimeout)
+		defer cancel()
+	}
 	return request(ctx, httpClient, p.url)
 }
 

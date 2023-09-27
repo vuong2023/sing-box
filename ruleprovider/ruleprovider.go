@@ -184,7 +184,7 @@ func (r *RuleProvider) FormatRule(dnsRules *[]option.DNSRule, routeRules *[]opti
 }
 
 func (r *RuleProvider) Start() error {
-	if r.updateInterval > 0 {
+	if r.updateInterval > 0 && r.cacheFile != "" {
 		r.autoUpdateCtx, r.autoUpdateCancel = context.WithCancel(r.ctx)
 		r.autoUpdateCancelDone = make(chan struct{}, 1)
 		go r.loopUpdate()
@@ -217,7 +217,7 @@ func (r *RuleProvider) Close() error {
 }
 
 func (r *RuleProvider) Update() {
-	if r.cacheFile != "" {
+	if r.updateInterval > 0 && r.cacheFile != "" {
 		r.update(r.ctx, false)
 	}
 }
@@ -229,7 +229,7 @@ func (r *RuleProvider) update(ctx context.Context, isFirst bool) {
 	defer r.updateLock.Unlock()
 
 	r.logger.Info("updating cache")
-	cache, err := r.wrapUpdate(r.autoUpdateCtx, false)
+	cache, err := r.wrapUpdate(ctx, false)
 	if err != nil {
 		r.logger.Error("update cache failed: ", err)
 		return
@@ -304,7 +304,11 @@ func (r *RuleProvider) wrapUpdate(ctx context.Context, isFirst bool) (*Cache, er
 	} else {
 		httpClient = r.httpClient
 	}
-
+	if r.requestTimeout > 0 {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, r.requestTimeout)
+		defer cancel()
+	}
 	return request(ctx, r.logger, httpClient, r.format, r.behavior, r.url)
 }
 
