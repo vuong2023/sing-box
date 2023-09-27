@@ -342,9 +342,12 @@ func (r *Router) Initialize(inbounds []adapter.Inbound, outbounds []adapter.Outb
 	for _, detour := range outbounds {
 		outboundByTag[detour.Tag()] = detour
 	}
-	proxyProviderByTag := make(map[string]adapter.ProxyProvider)
-	for _, proxyProvider := range proxyProviders {
-		proxyProviderByTag[proxyProvider.Tag()] = proxyProvider
+	var proxyProviderByTag map[string]adapter.ProxyProvider
+	if len(proxyProviders) > 0 {
+		proxyProviderByTag = make(map[string]adapter.ProxyProvider)
+		for _, proxyProvider := range proxyProviders {
+			proxyProviderByTag[proxyProvider.Tag()] = proxyProvider
+		}
 	}
 	var defaultOutboundForConnection adapter.Outbound
 	var defaultOutboundForPacketConnection adapter.Outbound
@@ -1041,6 +1044,8 @@ func (r *Router) ProxyProviders() []adapter.ProxyProvider {
 }
 
 func (r *Router) ProxyProvider(tag string) (proxyProvider adapter.ProxyProvider, loaded bool) {
-	proxyProvider, loaded = r.proxyProviderByTag[tag]
+	if r.proxyProviderByTag != nil {
+		proxyProvider, loaded = r.proxyProviderByTag[tag]
+	}
 	return
 }

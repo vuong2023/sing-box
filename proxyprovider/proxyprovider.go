@@ -1,3 +1,5 @@
+//go:build with_proxyprovider
+
 package proxyprovider
 
 import (
@@ -10,6 +12,7 @@ import (
 
 	"github.com/sagernet/sing-box/adapter"
 	"github.com/sagernet/sing-box/common/dialer"
+	"github.com/sagernet/sing-box/common/simpledns"
 	C "github.com/sagernet/sing-box/constant"
 	"github.com/sagernet/sing-box/log"
 	"github.com/sagernet/sing-box/option"
@@ -154,6 +157,9 @@ func (p *ProxyProvider) StartGetOutbounds() ([]option.Outbound, error) {
 			}
 		}
 	}
+	defer func() {
+		p.cache.Outbounds = nil
+	}()
 	return p.GetFullOutboundOptions()
 }
 
@@ -304,7 +310,6 @@ func (p *ProxyProvider) update(ctx context.Context, isFirst bool) {
 	}
 	p.cacheLock.Lock()
 	p.cache = cache
-	p.cacheLock.Unlock()
 	if p.cacheFile != "" {
 		err = cache.WriteToFile(p.cacheFile)
 		if err != nil {
@@ -312,6 +317,8 @@ func (p *ProxyProvider) update(ctx context.Context, isFirst bool) {
 			return
 		}
 	}
+	p.cache.Outbounds = nil
+	p.cacheLock.Unlock()
 }
 
 func (p *ProxyProvider) wrapUpdate(ctx context.Context, isFirst bool) (*Cache, error) {
@@ -325,7 +332,7 @@ func (p *ProxyProvider) wrapUpdate(ctx context.Context, isFirst bool) (*Cache, e
 						if err != nil {
 							return nil, err
 						}
-						ips, err := DNSLookup(ctx, p.requestDialer, p.dns, host, true, true)
+						ips, err := simpledns.DNSLookup(ctx, p.requestDialer, p.dns, host, true, true)
 						if err != nil {
 							return nil, err
 						}
@@ -354,7 +361,7 @@ func (p *ProxyProvider) wrapUpdate(ctx context.Context, isFirst bool) (*Cache, e
 						if err != nil {
 							return nil, err
 						}
-						ips, err := DNSLookup(ctx, dialer, p.dns, host, true, true)
+						ips, err := simpledns.DNSLookup(ctx, dialer, p.dns, host, true, true)
 						if err != nil {
 							return nil, err
 						}

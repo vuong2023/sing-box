@@ -131,39 +131,42 @@ func New(options Options) (*Box, error) {
 		}
 		outbounds = append(outbounds, out)
 	}
-	proxyProviders := make([]adapter.ProxyProvider, 0, len(options.ProxyProviders))
-	for i, proxyProviderOptions := range options.ProxyProviders {
-		var pp adapter.ProxyProvider
-		var tag string
-		if proxyProviderOptions.Tag != "" {
-			tag = proxyProviderOptions.Tag
-		} else {
-			tag = F.ToString(i)
-			proxyProviderOptions.Tag = tag
-		}
-		pp, err = proxyprovider.NewProxyProvider(ctx, router, logFactory.NewLogger(F.ToString("proxyprovider[", tag, "]")), tag, proxyProviderOptions)
-		if err != nil {
-			return nil, E.Cause(err, "parse proxyprovider[", i, "]")
-		}
-		outboundOptions, err := pp.StartGetOutbounds()
-		if err != nil {
-			return nil, E.Cause(err, "get outbounds from proxyprovider[", i, "]")
-		}
-		for i, outboundOptions := range outboundOptions {
-			var out adapter.Outbound
-			tag := outboundOptions.Tag
-			out, err = outbound.New(
-				ctx,
-				router,
-				logFactory.NewLogger(F.ToString("outbound/", outboundOptions.Type, "[", tag, "]")),
-				tag,
-				outboundOptions)
-			if err != nil {
-				return nil, E.Cause(err, "parse proxyprovider ["+pp.Tag()+"] outbound[", i, "]")
+	var proxyProviders []adapter.ProxyProvider
+	if len(options.ProxyProviders) > 0 {
+		proxyProviders = make([]adapter.ProxyProvider, 0, len(options.ProxyProviders))
+		for i, proxyProviderOptions := range options.ProxyProviders {
+			var pp adapter.ProxyProvider
+			var tag string
+			if proxyProviderOptions.Tag != "" {
+				tag = proxyProviderOptions.Tag
+			} else {
+				tag = F.ToString(i)
+				proxyProviderOptions.Tag = tag
 			}
-			outbounds = append(outbounds, out)
+			pp, err = proxyprovider.NewProxyProvider(ctx, router, logFactory.NewLogger(F.ToString("proxyprovider[", tag, "]")), tag, proxyProviderOptions)
+			if err != nil {
+				return nil, E.Cause(err, "parse proxyprovider[", i, "]")
+			}
+			outboundOptions, err := pp.StartGetOutbounds()
+			if err != nil {
+				return nil, E.Cause(err, "get outbounds from proxyprovider[", i, "]")
+			}
+			for i, outboundOptions := range outboundOptions {
+				var out adapter.Outbound
+				tag := outboundOptions.Tag
+				out, err = outbound.New(
+					ctx,
+					router,
+					logFactory.NewLogger(F.ToString("outbound/", outboundOptions.Type, "[", tag, "]")),
+					tag,
+					outboundOptions)
+				if err != nil {
+					return nil, E.Cause(err, "parse proxyprovider ["+pp.Tag()+"] outbound[", i, "]")
+				}
+				outbounds = append(outbounds, out)
+			}
+			proxyProviders = append(proxyProviders, pp)
 		}
-		proxyProviders = append(proxyProviders, pp)
 	}
 	err = router.Initialize(inbounds, outbounds, func() adapter.Outbound {
 		out, oErr := outbound.New(ctx, router, logFactory.NewLogger("outbound/direct"), "direct", option.Outbound{Type: "direct", Tag: "default"})

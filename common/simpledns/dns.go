@@ -1,4 +1,4 @@
-package proxyprovider
+package simpledns
 
 import (
 	"bytes"
