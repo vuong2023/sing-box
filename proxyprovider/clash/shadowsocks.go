@@ -19,10 +19,11 @@ type ClashShadowsocks struct {
 	Cipher   string `yaml:"cipher"`
 	Password string `yaml:"password"`
 	//
-	Plugin     string         `yaml:"plugin"`
-	PluginOpts map[string]any `yaml:"plugin-opts"`
-	UDP        *bool          `yaml:"udp"`
-	UDPOverTCP bool           `yaml:"udp-over-tcp"`
+	Plugin            string         `yaml:"plugin"`
+	PluginOpts        map[string]any `yaml:"plugin-opts"`
+	UDP               *bool          `yaml:"udp"`
+	UDPOverTCP        bool           `yaml:"udp-over-tcp"`
+	UDPOverTCPVersion uint8          `yaml:"udp-over-tcp-version,omitempty"`
 }
 
 func (c *ClashShadowsocks) Tag() string {
@@ -82,7 +83,7 @@ func (c *ClashShadowsocks) GenerateOptions() (*option.Outbound, error) {
 	if c.UDPOverTCP {
 		outboundOptions.ShadowsocksOptions.UDPOverTCPOptions = &option.UDPOverTCPOptions{
 			Enabled: true,
-			Version: 1,
+			Version: c.UDPOverTCPVersion,
 		}
 	}
 
