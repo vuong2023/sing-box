@@ -31,7 +31,7 @@ type ClashHysteria struct {
 	ServerName     string   `yaml:"servername"`
 	SNI            string   `yaml:"sni"`
 	SkipCertVerify bool     `yaml:"skip-cert-verify"`
-	Fingerprint    string   `yaml:"fingerprint"`
+	ClientFingerprint    string   `yaml:"client-fingerprint"`
 	CA             string   `yaml:"ca"`
 	CAStr          string   `yaml:"ca_str"`
 	CAStrNew       string   `yaml:"ca-str"`
@@ -118,10 +118,10 @@ func (c *ClashHysteria) GenerateOptions() (*option.Outbound, error) {
 	if c.ALPN != nil && len(c.ALPN) > 0 {
 		tlsOptions.ALPN = c.ALPN
 	}
-	if c.Fingerprint != "" {
+	if c.ClientFingerprint != "" {
 		tlsOptions.UTLS = &option.OutboundUTLSOptions{
 			Enabled:     true,
-			Fingerprint: c.Fingerprint,
+			Fingerprint: c.ClientFingerprint,
 		}
 	}
 

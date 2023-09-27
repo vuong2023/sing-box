@@ -21,7 +21,7 @@ type ClashVMess struct {
 	//
 	TLS            bool   `yaml:"tls"`
 	SkipCertVerify bool   `yaml:"skip-cert-verify"`
-	Fingerprint    string `yaml:"fingerprint"`
+	ClientFingerprint    string `yaml:"client-fingerprint"`
 	ServerName     string `yaml:"servername"`
 	SNI            string `yaml:"sni"`
 	//
@@ -92,10 +92,10 @@ func (c *ClashVMess) GenerateOptions() (*option.Outbound, error) {
 				Insecure:   c.SkipCertVerify,
 				ALPN:       []string{"http/1.1"},
 			}
-			if c.Fingerprint != "" {
+			if c.ClientFingerprint != "" {
 				tlsOptions.UTLS = &option.OutboundUTLSOptions{
 					Enabled:     true,
-					Fingerprint: c.Fingerprint,
+					Fingerprint: c.ClientFingerprint,
 				}
 			}
 
@@ -151,10 +151,10 @@ func (c *ClashVMess) GenerateOptions() (*option.Outbound, error) {
 				Insecure:   c.SkipCertVerify,
 				ALPN:       []string{"h2"},
 			}
-			if c.Fingerprint != "" {
+			if c.ClientFingerprint != "" {
 				tlsOptions.UTLS = &option.OutboundUTLSOptions{
 					Enabled:     true,
-					Fingerprint: c.Fingerprint,
+					Fingerprint: c.ClientFingerprint,
 				}
 			}
 
@@ -197,10 +197,10 @@ func (c *ClashVMess) GenerateOptions() (*option.Outbound, error) {
 			Insecure:   c.SkipCertVerify,
 			ALPN:       []string{"h2"},
 		}
-		if c.Fingerprint != "" {
+		if c.ClientFingerprint != "" {
 			tlsOptions.UTLS = &option.OutboundUTLSOptions{
 				Enabled:     true,
-				Fingerprint: c.Fingerprint,
+				Fingerprint: c.ClientFingerprint,
 			}
 		}
 
@@ -236,10 +236,10 @@ func (c *ClashVMess) GenerateOptions() (*option.Outbound, error) {
 			ServerName: c.ClashProxyBasic.Server,
 			Insecure:   c.SkipCertVerify,
 		}
-		if c.Fingerprint != "" {
+		if c.ClientFingerprint != "" {
 			tlsOptions.UTLS = &option.OutboundUTLSOptions{
 				Enabled:     true,
-				Fingerprint: c.Fingerprint,
+				Fingerprint: c.ClientFingerprint,
 			}
 		}
 
@@ -269,10 +269,10 @@ func (c *ClashVMess) GenerateOptions() (*option.Outbound, error) {
 				ServerName: c.ClashProxyBasic.Server,
 				Insecure:   c.SkipCertVerify,
 			}
-			if c.Fingerprint != "" {
+			if c.ClientFingerprint != "" {
 				tlsOptions.UTLS = &option.OutboundUTLSOptions{
 					Enabled:     true,
-					Fingerprint: c.Fingerprint,
+					Fingerprint: c.ClientFingerprint,
 				}
 			}
 
