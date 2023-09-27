@@ -92,7 +92,7 @@ func NewProxyProvider(ctx context.Context, router adapter.Router, logger log.Con
 				SelectorOptions: groupOptions.SelectorOptions,
 				URLTestOptions:  groupOptions.URLTestOptions,
 			}
-			if g.Filter != nil {
+			if groupOptions.Filter != nil {
 				filter, err := NewFilter(groupOptions.Filter)
 				if err != nil {
 					return nil, E.Cause(err, "initialize group filter failed")
@@ -262,7 +262,6 @@ func (p *ProxyProvider) GetFullOutboundOptions() ([]option.Outbound, error) {
 			}
 			groupOutbounds = append(groupOutbounds, outboundOptions)
 			groupOutboundTags = append(groupOutboundTags, group.Tag)
-			finalOutbounds = append(finalOutbounds, outboundOptions)
 		}
 	}
 
@@ -387,7 +386,28 @@ func (p *ProxyProvider) wrapUpdate(ctx context.Context, isFirst bool) (*Cache, e
 		ctx, cancel = context.WithTimeout(ctx, p.requestTimeout)
 		defer cancel()
 	}
-	return request(ctx, httpClient, p.url)
+	cache, err := request(ctx, httpClient, p.url)
+	if err != nil {
+		return nil, err
+	}
+	if p.globalFilter != nil {
+		outboundTagMap := make(map[string]*option.Outbound)
+		outboundTags := make([]string, 0, len(cache.Outbounds))
+		for i := range cache.Outbounds {
+			outboundTagMap[cache.Outbounds[i].Tag] = &cache.Outbounds[i]
+			outboundTags = append(outboundTags, cache.Outbounds[i].Tag)
+		}
+		newOutboundTags := p.globalFilter.Filter(outboundTags)
+		if len(newOutboundTags) == 0 {
+			return nil, E.New("no outbound available")
+		}
+		newOutbounds := make([]option.Outbound, 0, len(newOutboundTags))
+		for i := range newOutboundTags {
+			newOutbounds = append(newOutbounds, *outboundTagMap[newOutboundTags[i]])
+		}
+		cache.Outbounds = newOutbounds
+	}
+	return cache, nil
 }
 
 func (p *ProxyProvider) LastUpdateTime() time.Time {
