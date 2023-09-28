@@ -2,7 +2,8 @@ NAME = sing-box
 COMMIT = $(shell git rev-parse --short HEAD)
 TAGS_GO118 = with_gvisor,with_dhcp,with_wireguard,with_utls,with_reality_server,with_clash_api
 TAGS_GO120 = with_quic,with_ech
-TAGS ?= $(TAGS_GO118),$(TAGS_GO120),with_proxyprovider,with_ruleprovider
+# TAGS ?= $(TAGS_GO118),$(TAGS_GO120),with_proxyprovider,with_ruleprovider
+TAGS ?= $(TAGS_GO118),$(TAGS_GO120),with_proxyprovider,with_ruleprovider,with_clash_dashboard
 TAGS_TEST ?= with_gvisor,with_quic,with_wireguard,with_grpc,with_ech,with_utls,with_reality_server,with_shadowsocksr
 
 GOHOSTOS = $(shell go env GOHOSTOS)
@@ -189,3 +190,17 @@ update:
 	git fetch
 	git reset FETCH_HEAD --hard
 	git clean -fdx
+
+init_yacd:
+	rm -rf experimental/clashapi/clash_dashboard
+	mkdir -p experimental/clashapi/clash_dashboard
+	git clone https://github.com/Metacubex/Yacd-Meta -b gh-pages experimental/clashapi/clash_dashboard
+
+init_metacubexd:
+	rm -rf experimental/clashapi/clash_dashboard
+	mkdir -p experimental/clashapi/clash_dashboard
+	git clone https://github.com/Metacubex/metacubexd -b gh-pages experimental/clashapi/clash_dashboard
+
+clean_clash_dashboard:
+	rm -rf experimental/clashapi/clash_dashboard
+	mkdir -p experimental/clashapi/clash_dashboard

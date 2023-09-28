@@ -240,3 +240,29 @@ NETWORK          ==> network
     ]
 }
 ```
+
+### Clash Dashboard 内置支持
+
+- 编译时需要使用 `with_clash_dashboard` tag
+- 编译前需要先初始化 web 文件
+
+```
+使用 yacd 作为 Clash Dashboard：make init_yacd
+使用 metacubexd 作为 Clash Dashboard：make init_metacubexd
+清除 web 文件：make clean_clash_dashboard
+```
+
+##### 用法
+
+```json5
+{
+    "experimental": {
+        "clash_api": {
+            "external_controller": "0.0.0.0:9090",
+            //"external_ui": "" // 无需填写
+            "external_ui_buildin": true // 启用内置 Clash Dashboard
+        }
+    }
+}
+```
+
