@@ -24,7 +24,7 @@ func (c *Cache) IsNil() bool {
 }
 
 func (c *Cache) WriteToFile(path string) error {
-	raw, err := json.Marshal((*_Cache)(c))
+	raw, err := json.MarshalIndent((*_Cache)(c), "", "  ")
 	if err != nil {
 		return err
 	}
