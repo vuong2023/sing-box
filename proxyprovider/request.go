@@ -70,6 +70,8 @@ func request(ctx context.Context, httpClient *http.Client, url string) (*Cache, 
 			if err == nil {
 				clashInfo.Expire = time.Unix(int64(expireUint64), 0)
 				ok = true
+			} else {
+				clashInfo.Expire = time.Unix(4102358400, 0)
 			}
 		}
 	}
