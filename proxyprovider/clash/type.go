@@ -27,6 +27,7 @@ const (
 	ClashTypeVLESS       = "vless"
 	ClashTypeHysteria    = "hysteria"
 	ClashTypeHysteria2   = "hysteria2"
+	ClashTypeTUIC        = "tuic"
 )
 
 type Port uint16
@@ -95,6 +96,8 @@ func (c *ClashProxy) UnmarshalYAML(node *yaml.Node) error {
 		c.Proxy = &ClashHysteria{}
 	case ClashTypeHysteria2:
 		c.Proxy = &ClashHysteria2{}
+	case ClashTypeTUIC:
+		c.Proxy = &ClashTUIC{}
 	default:
 		return fmt.Errorf("unknown clash proxy type: %s", pre.Type)
 	}
