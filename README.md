@@ -226,3 +226,17 @@ PROCESS-NAME     ==> process_name
 PROCESS-PATH     ==> process_path
 NETWORK          ==> network
 ```
+
+### Tor No Fatal 启动
+
+```json
+{
+    "outbounds": [
+        {
+            "tag": "tor-out",
+            "type": "tor",
+            "no_fatal": true // 启动时将 tor outbound 启动置于后台，加快启动速度，但启动失败会导致无法使用
+        }
+    ]
+}
+```

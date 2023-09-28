@@ -33,7 +33,7 @@ type Tor struct {
 	startConf   *tor.StartConf
 	options     map[string]string
 	events      chan control.Event
-	slientStart bool
+	noFatal     bool
 	instance    *tor.Tor
 	socksClient *socks.Client
 }
@@ -80,17 +80,17 @@ func NewTor(ctx context.Context, router adapter.Router, logger log.ContextLogger
 			tag:          tag,
 			dependencies: withDialerDependency(options.DialerOptions),
 		},
-		ctx:         ctx,
-		proxy:       NewProxyListener(ctx, logger, outboundDialer),
-		startConf:   &startConf,
-		options:     options.Options,
-		slientStart: options.SlientStart,
+		ctx:       ctx,
+		proxy:     NewProxyListener(ctx, logger, outboundDialer),
+		startConf: &startConf,
+		options:   options.Options,
+		noFatal:   options.NoFatal,
 	}, nil
 }
 
 func (t *Tor) Start() error {
 	var err error
-	if !t.slientStart {
+	if !t.noFatal {
 		err = t.start()
 		if err != nil {
 			t.Close()
