@@ -19,11 +19,11 @@ type ClashVMess struct {
 	GlobalPadding       bool   `yaml:"global-padding"`
 	AuthenticatedLength bool   `yaml:"authenticated-length"`
 	//
-	TLS            bool   `yaml:"tls"`
-	SkipCertVerify bool   `yaml:"skip-cert-verify"`
-	ClientFingerprint    string `yaml:"client-fingerprint"`
-	ServerName     string `yaml:"servername"`
-	SNI            string `yaml:"sni"`
+	TLS               bool   `yaml:"tls"`
+	SkipCertVerify    bool   `yaml:"skip-cert-verify"`
+	ClientFingerprint string `yaml:"client-fingerprint"`
+	ServerName        string `yaml:"servername"`
+	SNI               string `yaml:"sni"`
 	//
 	Network string `yaml:"network"`
 	//

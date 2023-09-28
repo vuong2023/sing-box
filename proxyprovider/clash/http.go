@@ -14,11 +14,11 @@ type ClashHTTP struct {
 	Username string `yaml:"username"`
 	Password string `yaml:"password"`
 	//
-	TLS            bool   `yaml:"tls"`
-	SkipCertVerify bool   `yaml:"skip-cert-verify"`
-	ServerName     string `yaml:"servername"`
-	SNI            string `yaml:"sni"`
-	ClientFingerprint    string `yaml:"client-fingerprint"`
+	TLS               bool   `yaml:"tls"`
+	SkipCertVerify    bool   `yaml:"skip-cert-verify"`
+	ServerName        string `yaml:"servername"`
+	SNI               string `yaml:"sni"`
+	ClientFingerprint string `yaml:"client-fingerprint"`
 }
 
 func (c *ClashHTTP) Tag() string {

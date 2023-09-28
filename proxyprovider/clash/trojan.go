@@ -17,11 +17,11 @@ type ClashTrojan struct {
 	FlowShow string `yaml:"flow-show"`
 	UDP      *bool  `yaml:"udp"`
 	//
-	ALPN           []string `yaml:"alpn"`
-	SkipCertVerify bool     `yaml:"skip-cert-verify"`
-	ClientFingerprint    string   `yaml:"client-fingerprint"`
-	ServerName     string   `yaml:"servername"`
-	SNI            string   `yaml:"sni"`
+	ALPN              []string `yaml:"alpn"`
+	SkipCertVerify    bool     `yaml:"skip-cert-verify"`
+	ClientFingerprint string   `yaml:"client-fingerprint"`
+	ServerName        string   `yaml:"servername"`
+	SNI               string   `yaml:"sni"`
 	//
 	Network string `yaml:"network"`
 	//

@@ -19,14 +19,14 @@ type ClashHysteria2 struct {
 	Up           string `yaml:"up"`
 	Down         string `yaml:"down"`
 	//
-	ALPN           []string `yaml:"alpn"`
-	ServerName     string   `yaml:"servername"`
-	SNI            string   `yaml:"sni"`
-	SkipCertVerify bool     `yaml:"skip-cert-verify"`
-	ClientFingerprint    string   `yaml:"client-fingerprint"`
-	CA             string   `yaml:"ca"`
-	CAStr          string   `yaml:"ca_str"`
-	CAStrNew       string   `yaml:"ca-str"`
+	ALPN              []string `yaml:"alpn"`
+	ServerName        string   `yaml:"servername"`
+	SNI               string   `yaml:"sni"`
+	SkipCertVerify    bool     `yaml:"skip-cert-verify"`
+	ClientFingerprint string   `yaml:"client-fingerprint"`
+	CA                string   `yaml:"ca"`
+	CAStr             string   `yaml:"ca_str"`
+	CAStrNew          string   `yaml:"ca-str"`
 }
 
 func (c *ClashHysteria2) Tag() string {
