@@ -15,8 +15,9 @@ import (
 var _ adapter.RuleSet = (*LocalRuleSet)(nil)
 
 type LocalRuleSet struct {
-	rules    []adapter.HeadlessRule
-	metadata adapter.RuleSetMetadata
+	rules     []adapter.HeadlessRule
+	useIPRule bool
+	metadata  adapter.RuleSetMetadata
 }
 
 func NewLocalRuleSet(router adapter.Router, options option.RuleSet) (*LocalRuleSet, error) {
@@ -43,17 +44,22 @@ func NewLocalRuleSet(router adapter.Router, options option.RuleSet) (*LocalRuleS
 	default:
 		return nil, E.New("unknown rule set format: ", options.Format)
 	}
+	useIPRule := false
 	rules := make([]adapter.HeadlessRule, len(plainRuleSet.Rules))
 	for i, ruleOptions := range plainRuleSet.Rules {
-		rules[i], err = NewHeadlessRule(router, ruleOptions)
+		rule, err := NewHeadlessRule(router, ruleOptions)
 		if err != nil {
 			return nil, E.Cause(err, "parse rule_set.rules.[", i, "]")
+		}
+		rules[i] = rule
+		if rule.UseIPRule() {
+			useIPRule = true
 		}
 	}
 	var metadata adapter.RuleSetMetadata
 	metadata.ContainsProcessRule = hasHeadlessRule(plainRuleSet.Rules, isProcessHeadlessRule)
 	metadata.ContainsWIFIRule = hasHeadlessRule(plainRuleSet.Rules, isWIFIHeadlessRule)
-	return &LocalRuleSet{rules, metadata}, nil
+	return &LocalRuleSet{rules, useIPRule, metadata}, nil
 }
 
 func (s *LocalRuleSet) Match(metadata *adapter.InboundContext) bool {
@@ -63,6 +69,10 @@ func (s *LocalRuleSet) Match(metadata *adapter.InboundContext) bool {
 		}
 	}
 	return false
+}
+
+func (s *LocalRuleSet) UseIPRule() bool {
+	return s.useIPRule
 }
 
 func (s *LocalRuleSet) StartContext(ctx context.Context, startContext adapter.RuleSetStartContext) error {

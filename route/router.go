@@ -1019,18 +1019,47 @@ func (r *Router) match0(ctx context.Context, metadata *adapter.InboundContext, d
 			metadata.ProcessInfo = processInfo
 		}
 	}
+	resolveStatus := -1
+	if metadata.Destination.IsFqdn() && len(metadata.DestinationAddresses) == 0 {
+		resolveStatus = 0
+	}
 	for i, rule := range r.rules {
 		metadata.ResetRuleCache()
+		if !rule.SkipResolve() && resolveStatus == 0 && rule.UseIPRule() {
+			addresses, err := r.LookupDefault(adapter.WithContext(ctx, metadata), metadata.Destination.Fqdn)
+			resolveStatus = 2
+			if err == nil {
+				resolveStatus = 1
+				metadata.DestinationAddresses = addresses
+			}
+			metadata.ResetRuleCache()
+		}
 		if rule.Match(metadata) {
 			detour := rule.Outbound()
 			r.logger.DebugContext(ctx, "match[", i, "] ", rule.String(), " => ", detour)
 			if outbound, loaded := r.Outbound(detour); loaded {
+				if resolveStatus == 1 && !r.MustUseIP(outbound, metadata.Network) {
+					metadata.DestinationAddresses = []netip.Addr{}
+				}
 				return rule, outbound
 			}
 			r.logger.ErrorContext(ctx, "outbound not found: ", detour)
 		}
 	}
+	if resolveStatus == 1 && !r.MustUseIP(defaultOutbound, metadata.Network) {
+		metadata.DestinationAddresses = []netip.Addr{}
+	}
 	return nil, defaultOutbound
+}
+
+func (r *Router) MustUseIP(out adapter.Outbound, network string) bool {
+	tag := outbound.RealOutboundTag(out, network)
+	detour, _ := r.Outbound(tag)
+	d, ok := detour.(adapter.OutboundUseIP)
+	if !ok {
+		return false
+	}
+	return d.UseIP()
 }
 
 func (r *Router) InterfaceFinder() control.InterfaceFinder {
