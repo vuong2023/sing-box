@@ -38,6 +38,10 @@ func (a *myOutboundAdapter) Tag() string {
 	return a.tag
 }
 
+func (a *myOutboundAdapter) SetTag(tag string) {
+	a.tag = tag
+}
+
 func (a *myOutboundAdapter) Network() []string {
 	return a.network
 }

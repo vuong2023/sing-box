@@ -17,6 +17,7 @@ type Outbound interface {
 	N.Dialer
 	NewConnection(ctx context.Context, conn net.Conn, metadata InboundContext) error
 	NewPacketConnection(ctx context.Context, conn N.PacketConn, metadata InboundContext) error
+	SetTag(tag string)
 }
 
 type OutboundUseIP interface {
