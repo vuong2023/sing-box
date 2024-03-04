@@ -95,14 +95,14 @@ jobs:
           go build -v -trimpath -ldflags "-X 'github.com/sagernet/sing-box/constant.Version=${VERSION}' -X 'main.buildDate=${BUILD_DATE}' -X 'main.developerName=${DEVELOPER_NAME}' -s -w -buildid=" -tags "${TAGS}" ./cmd/sing-box
       - name: package
         run: |
-         tar -czvf sing-box-${{env.VERSION}}-${{env.GOOS}}-${{matrix.jobs.output}}.tar.gz sing-box/
+         tar -czvf sing-box-${{env.VERSION}}-${{matrix.jobs.output}}.tar.gz sing-box/
       - name: upload
         uses: svenstaro/upload-release-action@2.7.0
         with:
          repo_token: ${{ secrets.GITHUB_TOKEN }}
          tag: ${{ github.ref }}
-         file: sing-box-${{env.VERSION}}-${{env.GOOS}}-${{matrix.jobs.output}}.tar.gz
-         asset_name: s${{env.VERSION}}-${{env.GOOS}}-${{matrix.jobs.output}}.tar.gz
+         file: sing-box-${{env.VERSION}}-${{matrix.jobs.output}}.tar.gz
+         asset_name: sing-box-${{env.VERSION}}-${{matrix.jobs.output}}.tar.gz
          prerelease: true
         
   build-other-platform:
