@@ -89,14 +89,21 @@ jobs:
           GOARM: '7'
           GOARCH: ${{matrix.jobs.goarch}}
           CGO_ENABLED: '1'
-        run: go build -v -trimpath -ldflags "-X 'github.com/sagernet/sing-box/constant.Version=${VERSION}' -s -w -buildid=" -tags "${TAGS}" ./cmd/sing-box
-
-      - name: upload core
-        uses: actions/upload-artifact@v4.1.0
+        run: |
+          BUILD_DATE=$(TZ=Asia/Ho_Chi_Minh date +'%Y.%m.%d.%H%M')
+          DEVELOPER_NAME="Văn Vương07"
+          go build -v -trimpath -ldflags "-X 'github.com/sagernet/sing-box/constant.Version=${VERSION}' -X 'main.buildDate=${BUILD_DATE}' -X 'main.developerName=${DEVELOPER_NAME}' -s -w -buildid=" -tags "${TAGS}" ./cmd/sing-box
+      - name: package
+        run: |
+         tar -czvf sing-box-${{env.VERSION}}-${{env.GOOS}}-${{matrix.jobs.output}}.tar.gz sing-box/
+      - name: upload
+        uses: svenstaro/upload-release-action@2.7.0
         with:
-          name: sing-box-${{env.VERSION}}-android-${{matrix.jobs.output}}
-          path: sing-box
-          compression-level: 9
+         repo_token: ${{ secrets.GITHUB_TOKEN }}
+         tag: ${{ github.ref }}
+         file: sing-box-${{env.VERSION}}-${{env.GOOS}}-${{matrix.jobs.output}}.tar.gz
+         asset_name: s${{env.VERSION}}-${{env.GOOS}}-${{matrix.jobs.output}}.tar.gz
+         prerelease: true
         
   build-other-platform:
     runs-on: ubuntu-latest
